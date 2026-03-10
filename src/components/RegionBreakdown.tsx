@@ -1,6 +1,6 @@
 "use client";
 
-import { HistoricalAlert } from "@/lib/types";
+import { HistoricalAlert, isRealAlert } from "@/lib/types";
 
 interface Props {
   alerts: HistoricalAlert[];
@@ -15,7 +15,7 @@ export default function RegionBreakdown({ alerts, isLoading }: Props) {
   }
 
   const cityCounts: Record<string, number> = {};
-  alerts.forEach((a) => {
+  alerts.filter((a) => isRealAlert(a.category)).forEach((a) => {
     const city = a.data?.trim();
     if (city) cityCounts[city] = (cityCounts[city] ?? 0) + 1;
   });

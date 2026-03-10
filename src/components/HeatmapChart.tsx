@@ -1,6 +1,6 @@
 "use client";
 
-import { HistoricalAlert } from "@/lib/types";
+import { HistoricalAlert, isRealAlert } from "@/lib/types";
 import { getDay, getHours } from "date-fns";
 
 interface Props {
@@ -23,7 +23,7 @@ export default function HeatmapChart({ alerts, isLoading }: Props) {
     Array(24).fill(0)
   );
 
-  alerts.forEach((a) => {
+  alerts.filter((a) => isRealAlert(a.category)).forEach((a) => {
     const date = new Date(a.alertDate);
     const day = getDay(date);
     const hour = getHours(date);

@@ -33,13 +33,25 @@ export interface CityWithCoords extends City {
 
 export const CATEGORY_LABELS: Record<number, string> = {
   1: "Rockets & Missiles",
-  2: "UAV / Drone",
-  3: "Earthquake",
-  4: "Radiological",
-  5: "Tsunami",
-  6: "Hostile Aircraft",
-  13: "Rockets & Missiles",
+  2: "Hostile Aircraft",
+  3: "General",
+  4: "General",
+  5: "General",
+  6: "General",
+  7: "Hazardous Materials",
+  9: "Radiological",
+  10: "Terrorist Infiltration",
+  11: "Tsunami",
+  13: "Event Ended",
+  14: "Incoming Warning",
 };
+
+// Categories that are real alerts (not metadata like "event ended")
+export const REAL_ALERT_CATEGORIES = new Set([1, 2, 3, 4, 5, 6, 7, 9, 10, 11]);
+
+export function isRealAlert(category: number): boolean {
+  return REAL_ALERT_CATEGORIES.has(category);
+}
 
 export const CITY_COORDS: Record<string, [number, number]> = {
   "תל אביב - מרכז העיר": [32.0853, 34.7818],

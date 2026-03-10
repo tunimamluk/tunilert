@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { HistoricalAlert } from "@/lib/types";
+import { HistoricalAlert, isRealAlert } from "@/lib/types";
 import { format, startOfDay, eachDayOfInterval, parseISO } from "date-fns";
 
 interface Props {
@@ -37,7 +37,7 @@ export default function HistoryChart({
   });
 
   const countByDay: Record<string, number> = {};
-  alerts.forEach((a) => {
+  alerts.filter((a) => isRealAlert(a.category)).forEach((a) => {
     const day = format(startOfDay(new Date(a.alertDate)), "yyyy-MM-dd");
     countByDay[day] = (countByDay[day] ?? 0) + 1;
   });

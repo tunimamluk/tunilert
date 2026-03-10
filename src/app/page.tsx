@@ -10,6 +10,7 @@ import HistoryChart from "@/components/HistoryChart";
 import RegionBreakdown from "@/components/RegionBreakdown";
 import HeatmapChart from "@/components/HeatmapChart";
 import ProbabilityWidget from "@/components/ProbabilityWidget";
+import AlertsFeed from "@/components/AlertsFeed";
 import { Activity, Clock } from "lucide-react";
 
 const AlertsMap = dynamic(() => import("@/components/AlertsMap"), {
@@ -36,10 +37,8 @@ export default function Home() {
     async (from: string, to: string, ft: string, tt: string) => {
       setIsLoading(true);
       try {
-        const res = await fetch(
-          `/api/history?from=${from}&to=${to}&fromTime=${ft}&toTime=${tt}`,
-          { cache: "no-store" }
-        );
+        const params = new URLSearchParams({ from, to, fromTime: ft, toTime: tt });
+        const res = await fetch(`/api/history?${params}`, { cache: "no-store" });
         const json = await res.json();
         setAlerts(Array.isArray(json.results) ? json.results : []);
         setTotalStored(json.total ?? null);
@@ -200,10 +199,11 @@ export default function Home() {
         <StatsCards alerts={alerts} isLoading={isLoading} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-5">
             <AlertsMap historicalAlerts={alerts} liveAlert={liveAlert} />
+            <RegionBreakdown alerts={alerts} isLoading={isLoading} />
           </div>
-          <RegionBreakdown alerts={alerts} isLoading={isLoading} />
+          <AlertsFeed alerts={alerts} isLoading={isLoading} />
         </div>
 
         <HistoryChart

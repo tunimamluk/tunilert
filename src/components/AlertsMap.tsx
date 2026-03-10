@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { HistoricalAlert, LiveAlert, CITY_COORDS } from "@/lib/types";
+import { HistoricalAlert, LiveAlert, CITY_COORDS, isRealAlert } from "@/lib/types";
 
 interface Props {
   historicalAlerts: HistoricalAlert[];
@@ -54,9 +54,9 @@ export default function AlertsMap({ historicalAlerts, liveAlert }: Props) {
       markersRef.current.forEach((m) => map.removeLayer(m));
       markersRef.current = [];
 
-      // Count historical alerts per city
+      // Count historical real alerts per city
       const cityCounts: Record<string, number> = {};
-      historicalAlerts.forEach((a) => {
+      historicalAlerts.filter((a) => isRealAlert(a.category)).forEach((a) => {
         const city = a.data?.trim();
         if (city) cityCounts[city] = (cityCounts[city] ?? 0) + 1;
       });

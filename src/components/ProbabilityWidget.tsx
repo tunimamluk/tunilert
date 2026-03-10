@@ -1,6 +1,6 @@
 "use client";
 
-import { HistoricalAlert } from "@/lib/types";
+import { HistoricalAlert, isRealAlert } from "@/lib/types";
 import {
   eachDayOfInterval,
   format,
@@ -30,7 +30,9 @@ export default function ProbabilityWidget({
     );
   }
 
-  if (alerts.length === 0) {
+  const realAlerts = alerts.filter((a) => isRealAlert(a.category));
+
+  if (realAlerts.length === 0) {
     return (
       <div className="rounded-xl border border-gray-800 bg-gray-900/30 p-5">
         <h2 className="text-gray-200 font-semibold mb-4">Alert Probability</h2>
@@ -48,9 +50,9 @@ export default function ProbabilityWidget({
 
   const totalDays = days.length;
 
-  // Days with at least one alert
+  // Days with at least one real alert
   const daysWithAlert = new Set(
-    alerts.map((a) =>
+    realAlerts.map((a) =>
       format(startOfDay(new Date(a.alertDate)), "yyyy-MM-dd")
     )
   );
