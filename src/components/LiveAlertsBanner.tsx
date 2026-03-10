@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { LiveAlert, CATEGORY_LABELS } from "@/lib/types";
 import { AlertTriangle, Shield } from "lucide-react";
 
@@ -10,14 +10,16 @@ export default function LiveAlertsBanner({
   onAlert?: (alert: LiveAlert | null) => void;
 }) {
   const [alert, setAlert] = useState<LiveAlert | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [timeString, setTimeString] = useState<string>("");
+  const mounted = useRef(false);
 
   const fetchAlert = useCallback(async () => {
     try {
       const res = await fetch("/api/alerts", { cache: "no-store" });
       const data: LiveAlert | null = await res.json();
+      const now = new Date();
       setAlert(data);
-      setLastUpdated(new Date());
+      if (mounted.current) setTimeString(now.toLocaleTimeString());
       onAlert?.(data);
     } catch {
       // silently ignore fetch errors
@@ -25,10 +27,15 @@ export default function LiveAlertsBanner({
   }, [onAlert]);
 
   useEffect(() => {
+    mounted.current = true;
+    setTimeString(new Date().toLocaleTimeString());
     fetchAlert();
     const interval = setInterval(fetchAlert, 3000);
-    return () => clearInterval(interval);
-  }, [fetchAlert]);
+    return () => {
+      mounted.current = false;
+      clearInterval(interval);
+    };
+  }, [fetchAlert]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!alert) {
     return (
@@ -39,7 +46,7 @@ export default function LiveAlertsBanner({
             No active alerts
           </span>
           <span className="text-gray-500 text-xs ml-3">
-            Updated {lastUpdated.toLocaleTimeString()}
+            Updated {timeString}
           </span>
         </div>
       </div>
@@ -57,7 +64,7 @@ export default function LiveAlertsBanner({
           {categoryLabel}
         </span>
         <span className="ml-auto text-gray-400 text-xs">
-          {lastUpdated.toLocaleTimeString()}
+          {timeString}
         </span>
       </div>
       <div className="flex flex-wrap gap-2">

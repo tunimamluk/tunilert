@@ -7,11 +7,14 @@ export interface LiveAlert {
 }
 
 export interface HistoricalAlert {
-  alertDate: string;
-  title: string;
-  data: string;
+  rid: number;
+  data: string;        // city name (Hebrew)
+  alertDate: string;   // "2026-03-10T18:40:00"
+  date: string;        // "10.03.2026"
+  time: string;        // "18:40:13"
   category: number;
-  id?: string;
+  category_desc: string;
+  matrix_id: number;
 }
 
 export interface City {
