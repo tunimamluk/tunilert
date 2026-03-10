@@ -102,3 +102,16 @@ export function totalStored(): number {
   ensureLoaded();
   return alertsMap.size;
 }
+
+/** Get the date range of stored data */
+export function getDateRange(): { from: string | null; to: string | null; uniqueDates: number } {
+  ensureLoaded();
+  if (alertsMap.size === 0) return { from: null, to: null, uniqueDates: 0 };
+
+  const dates = new Set<string>();
+  for (const a of alertsMap.values()) {
+    dates.add(a.alertDate.slice(0, 10));
+  }
+  const sorted = Array.from(dates).sort();
+  return { from: sorted[0], to: sorted[sorted.length - 1], uniqueDates: sorted.length };
+}

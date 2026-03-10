@@ -32,16 +32,18 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [liveAlert, setLiveAlert] = useState<LiveAlert | null>(null);
   const [totalStored, setTotalStored] = useState<number | null>(null);
+  const [dataRange, setDataRange] = useState<{ from: string | null; to: string | null; uniqueDates: number } | null>(null);
 
   const fetchHistory = useCallback(
     async (from: string, to: string, ft: string, tt: string) => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams({ from, to, fromTime: ft, toTime: tt });
-        const res = await fetch(`/api/history?${params}`, { cache: "no-store" });
+        const params = new URLSearchParams({ from, to, fromTime: ft, toTime: tt, _t: String(Date.now()) });
+        const res = await fetch(`/api/history?${params}`);
         const json = await res.json();
         setAlerts(Array.isArray(json.results) ? json.results : []);
         setTotalStored(json.total ?? null);
+        if (json.dateRange) setDataRange(json.dateRange);
       } catch {
         setAlerts([]);
       } finally {
@@ -86,11 +88,18 @@ export default function Home() {
         <span className="text-gray-600 text-sm ml-1">
           Israel Red Alert Statistics
         </span>
-        {totalStored !== null && (
-          <span className="ml-auto text-gray-600 text-xs">
-            {totalStored.toLocaleString()} alerts stored
-          </span>
-        )}
+        <div className="ml-auto text-right">
+          {totalStored !== null && (
+            <span className="text-gray-600 text-xs">
+              {totalStored.toLocaleString()} alerts stored
+            </span>
+          )}
+          {dataRange?.from && (
+            <span className="text-gray-700 text-xs block">
+              Data: {dataRange.from} → {dataRange.to} ({dataRange.uniqueDates} day{dataRange.uniqueDates !== 1 ? "s" : ""})
+            </span>
+          )}
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -194,6 +203,13 @@ export default function Home() {
               </span>
             )}
           </div>
+
+          {/* Data availability notice */}
+          {dataRange && dataRange.uniqueDates <= 1 && (
+            <p className="text-yellow-600/80 text-xs mt-1">
+              The Pikud HaOref API is limited to ~3,000 most recent records. On active days like today, only today&apos;s data is available. The store accumulates data over time — date filtering will improve as more days are collected.
+            </p>
+          )}
         </div>
 
         <StatsCards alerts={alerts} isLoading={isLoading} />
