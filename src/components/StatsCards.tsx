@@ -18,23 +18,21 @@ interface Props {
   toTime: string;
 }
 
-type StatKey = "today" | "lastHour" | "thisWeek" | "mostTargeted";
+type StatKey = "today" | "lastHour" | "thisWeek";
 
 const CONFIGURABLE_OPTIONS: { key: StatKey; label: string; description: string }[] = [
-  { key: "today",        label: "Alerts Today",  description: "Total alerts fired today" },
-  { key: "lastHour",     label: "Last Hour",     description: "Alerts in the past 60 min" },
-  { key: "thisWeek",     label: "This Week",     description: "Alerts in the current week" },
-  { key: "mostTargeted", label: "Most Targeted", description: "City hit most in selected range" },
+  { key: "today",    label: "Alerts Today", description: "Total alerts fired today" },
+  { key: "lastHour", label: "Last Hour",    description: "Alerts in the past 60 min" },
+  { key: "thisWeek", label: "This Week",    description: "Alerts in the current week" },
 ];
 
-const DEFAULT_KEYS: StatKey[] = ["lastHour", "thisWeek", "mostTargeted"];
-const LS_KEY = "tunilert_stat_cards_v5";
+const DEFAULT_KEYS: StatKey[] = ["today", "lastHour", "thisWeek"];
+const LS_KEY = "tunilert_stat_cards_v6";
 
 const CARD_COLORS: Record<StatKey, string> = {
-  today:        "border-red-800/50 bg-red-950/30 text-red-300",
-  lastHour:     "border-orange-800/50 bg-orange-950/30 text-orange-300",
-  thisWeek:     "border-teal-800/50 bg-teal-950/30 text-teal-300",
-  mostTargeted: "border-purple-800/50 bg-purple-950/30 text-purple-300",
+  today:    "border-red-800/50 bg-red-950/30 text-red-300",
+  lastHour: "border-orange-800/50 bg-orange-950/30 text-orange-300",
+  thisWeek: "border-teal-800/50 bg-teal-950/30 text-teal-300",
 };
 
 function StatCard({
@@ -115,13 +113,6 @@ export default function StatsCards({ alerts, isLoading, fromTime, toTime }: Prop
     return t >= fromTime && t <= toTime;
   }).length;
 
-  const cityCounts: Record<string, number> = {};
-  real.forEach((a) => {
-    const city = a.data?.trim();
-    if (city) cityCounts[city] = (cityCounts[city] ?? 0) + 1;
-  });
-  const topCity = Object.entries(cityCounts).sort((a, b) => b[1] - a[1])[0];
-
   function getStatValue(key: StatKey): { value: string | number; sub?: string } {
     switch (key) {
       case "today":
@@ -130,11 +121,6 @@ export default function StatsCards({ alerts, isLoading, fromTime, toTime }: Prop
         return { value: real.filter((a) => new Date(a.alertDate) >= oneHourAgo).length };
       case "thisWeek":
         return { value: real.filter((a) => isThisWeek(new Date(a.alertDate))).length };
-      case "mostTargeted":
-        return {
-          value: topCity ? topCity[0] : "—",
-          sub: topCity ? `${topCity[1]} hits` : undefined,
-        };
     }
   }
 
@@ -162,7 +148,7 @@ export default function StatsCards({ alerts, isLoading, fromTime, toTime }: Prop
               <X size={14} />
             </button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {CONFIGURABLE_OPTIONS.map(({ key, label, description }) => {
               const active = selectedKeys.includes(key);
               return (
@@ -201,7 +187,7 @@ export default function StatsCards({ alerts, isLoading, fromTime, toTime }: Prop
         </div>
       )}
 
-      {/* Locked "Alerts Today" card + 3 configurable slots */}
+      {/* 1 locked card + 3 configurable slots */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Alerts in Range"

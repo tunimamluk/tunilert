@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { format } from "date-fns";
 import { HistoricalAlert, LiveAlert } from "@/lib/types";
 import LiveAlertsBanner from "@/components/LiveAlertsBanner";
 import StatsCards from "@/components/StatsCards";
-import HistoryChart from "@/components/HistoryChart";
 import RegionBreakdown from "@/components/RegionBreakdown";
 import AlertsFeed from "@/components/AlertsFeed";
 import MyAreaCard from "@/components/MyAreaCard";
@@ -20,8 +18,6 @@ const AlertsMap = dynamic(() => import("@/components/AlertsMap"), {
 });
 
 export default function Home() {
-  const today = format(new Date(), "yyyy-MM-dd");
-
   const [fromTime, setFromTime] = useState("00:00");
   const [toTime, setToTime] = useState("23:59");
   const [alerts, setAlerts] = useState<HistoricalAlert[]>([]);
@@ -147,12 +143,6 @@ export default function Home() {
           <AlertsFeed alerts={alerts} isLoading={isLoading} />
         </div>
 
-        <HistoryChart
-          alerts={alerts}
-          fromDate={today}
-          toDate={today}
-          isLoading={isLoading}
-        />
       </main>
 
       <footer className="border-t border-gray-800 text-center text-gray-600 text-xs py-4 mt-6">
