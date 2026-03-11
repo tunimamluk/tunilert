@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { HistoricalAlert, LiveAlert, CITY_COORDS, isRealAlert } from "@/lib/types";
+import { useEffect, useRef, useState } from "react";
+import { HistoricalAlert, LiveAlert, CITY_COORDS, isRealAlert, City } from "@/lib/types";
 
 interface Props {
   historicalAlerts: HistoricalAlert[];
@@ -14,6 +14,21 @@ export default function AlertsMap({ historicalAlerts, liveAlert }: Props) {
   const mapInstance = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<any[]>([]);
+  const [migunMap, setMigunMap] = useState<Record<string, number>>({});
+
+  // Fetch city shelter times once (Option H)
+  useEffect(() => {
+    fetch("/api/cities")
+      .then((r) => r.json())
+      .then((cities: City[]) => {
+        const lookup: Record<string, number> = {};
+        for (const c of cities) {
+          if (c.label && c.migun_time != null) lookup[c.label] = c.migun_time;
+        }
+        setMigunMap(lookup);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return;
@@ -64,6 +79,12 @@ export default function AlertsMap({ historicalAlerts, liveAlert }: Props) {
       // Live alert cities
       const liveCities = new Set(liveAlert?.data ?? []);
 
+      function migunLabel(city: string): string {
+        const t = migunMap[city];
+        if (!t) return "";
+        return `<br/><span style='color:#94a3b8;font-size:11px'>🛡 Shelter in ${t}s</span>`;
+      }
+
       Object.entries(cityCounts).forEach(([city, count]) => {
         const coords = CITY_COORDS[city];
         if (!coords) return;
@@ -81,7 +102,7 @@ export default function AlertsMap({ historicalAlerts, liveAlert }: Props) {
         })
           .addTo(map)
           .bindPopup(
-            `<b>${city}</b><br/>${count} alert${count !== 1 ? "s" : ""}${isLive ? "<br/><span style='color:#ef4444'>⚠ ACTIVE NOW</span>" : ""}`
+            `<b>${city}</b><br/>${count} alert${count !== 1 ? "s" : ""}${migunLabel(city)}${isLive ? "<br/><span style='color:#ef4444'>⚠ ACTIVE NOW</span>" : ""}`
           );
 
         markersRef.current.push(circle);
@@ -101,11 +122,11 @@ export default function AlertsMap({ historicalAlerts, liveAlert }: Props) {
           fillOpacity: 0.9,
         })
           .addTo(map)
-          .bindPopup(`<b>${city}</b><br/><span style='color:#ef4444'>⚠ ACTIVE NOW</span>`);
+          .bindPopup(`<b>${city}</b>${migunLabel(city)}<br/><span style='color:#ef4444'>⚠ ACTIVE NOW</span>`);
         markersRef.current.push(circle);
       });
     });
-  }, [historicalAlerts, liveAlert]);
+  }, [historicalAlerts, liveAlert, migunMap]);
 
   return (
     <div className="rounded-xl border border-gray-800 overflow-hidden" style={{ height: 360 }}>

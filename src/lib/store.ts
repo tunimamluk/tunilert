@@ -103,6 +103,38 @@ export function totalStored(): number {
   return alertsMap.size;
 }
 
+const REAL_CATS = new Set([1, 2, 3, 4, 5, 6, 7, 9, 10, 11]);
+
+/** Compute all-time summary stats (not filtered by date) */
+export function getAllTimeStats(): {
+  busiestDay: { date: string; count: number } | null;
+  totalCitiesHit: number;
+  mostActiveMonth: { month: string; count: number } | null;
+} {
+  ensureLoaded();
+  const dayCounts: Record<string, number> = {};
+  const monthCounts: Record<string, number> = {};
+  const cities = new Set<string>();
+
+  for (const a of alertsMap.values()) {
+    if (!REAL_CATS.has(a.category)) continue;
+    const day = a.alertDate.slice(0, 10);
+    dayCounts[day] = (dayCounts[day] ?? 0) + 1;
+    const month = a.alertDate.slice(0, 7);
+    monthCounts[month] = (monthCounts[month] ?? 0) + 1;
+    if (a.data?.trim()) cities.add(a.data.trim());
+  }
+
+  const busiestEntry = Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0];
+  const bestMonth = Object.entries(monthCounts).sort((a, b) => b[1] - a[1])[0];
+
+  return {
+    busiestDay: busiestEntry ? { date: busiestEntry[0], count: busiestEntry[1] } : null,
+    totalCitiesHit: cities.size,
+    mostActiveMonth: bestMonth ? { month: bestMonth[0], count: bestMonth[1] } : null,
+  };
+}
+
 /** Get the date range of stored data */
 export function getDateRange(): { from: string | null; to: string | null; uniqueDates: number } {
   ensureLoaded();

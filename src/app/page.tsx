@@ -2,16 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
 import { HistoricalAlert, LiveAlert } from "@/lib/types";
 import LiveAlertsBanner from "@/components/LiveAlertsBanner";
 import StatsCards from "@/components/StatsCards";
 import HistoryChart from "@/components/HistoryChart";
 import RegionBreakdown from "@/components/RegionBreakdown";
-import HeatmapChart from "@/components/HeatmapChart";
-import ProbabilityWidget from "@/components/ProbabilityWidget";
 import AlertsFeed from "@/components/AlertsFeed";
-import { Activity, Clock } from "lucide-react";
+import { Activity } from "lucide-react";
 
 const AlertsMap = dynamic(() => import("@/components/AlertsMap"), {
   ssr: false,
@@ -22,61 +20,47 @@ const AlertsMap = dynamic(() => import("@/components/AlertsMap"), {
 
 export default function Home() {
   const today = format(new Date(), "yyyy-MM-dd");
-  const defaultFrom = format(subDays(new Date(), 30), "yyyy-MM-dd");
 
-  const [fromDate, setFromDate] = useState(defaultFrom);
-  const [toDate, setToDate] = useState(today);
-  const [fromTime, setFromTime] = useState("00:00");
-  const [toTime, setToTime] = useState("23:59");
   const [alerts, setAlerts] = useState<HistoricalAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [liveAlert, setLiveAlert] = useState<LiveAlert | null>(null);
   const [totalStored, setTotalStored] = useState<number | null>(null);
   const [dataRange, setDataRange] = useState<{ from: string | null; to: string | null; uniqueDates: number } | null>(null);
+  const [bulkFetching, setBulkFetching] = useState(false);
 
-  const fetchHistory = useCallback(
-    async (from: string, to: string, ft: string, tt: string) => {
-      setIsLoading(true);
-      try {
-        const params = new URLSearchParams({ from, to, fromTime: ft, toTime: tt, _t: String(Date.now()) });
-        const res = await fetch(`/api/history?${params}`);
-        const json = await res.json();
-        setAlerts(Array.isArray(json.results) ? json.results : []);
-        setTotalStored(json.total ?? null);
-        if (json.dateRange) setDataRange(json.dateRange);
-      } catch {
-        setAlerts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
+  // My area — shared between LiveAlertsBanner (gating sound) and any future area widget
+  const [myCity, setMyCity] = useState<string>(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("tunilert_my_city") ?? "";
+    return "";
+  });
 
-  useEffect(() => {
-    fetchHistory(fromDate, toDate, fromTime, toTime);
-  }, [fetchHistory, fromDate, toDate, fromTime, toTime]);
-
-  const quickRanges = [
-    { label: "Today", days: 0 },
-    { label: "7d", days: 7 },
-    { label: "30d", days: 30 },
-    { label: "90d", days: 90 },
-  ];
-
-  function applyQuickRange(days: number) {
-    if (days === 0) {
-      setFromDate(today);
-    } else {
-      setFromDate(format(subDays(new Date(), days), "yyyy-MM-dd"));
-    }
-    setToDate(today);
-    setFromTime("00:00");
-    setToTime("23:59");
+  function handleCityChange(city: string) {
+    setMyCity(city);
+    try { localStorage.setItem("tunilert_my_city", city); } catch { /* ignore */ }
   }
 
-  const inputClass =
-    "bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-red-600";
+  const fetchHistory = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Always fetch all stored data (no date filter) so charts and map have full context.
+      // Today's-only filtering is done client-side in each component.
+      const params = new URLSearchParams({ _t: String(Date.now()) });
+      const res = await fetch(`/api/history?${params}`);
+      const json = await res.json();
+      setAlerts(Array.isArray(json.results) ? json.results : []);
+      setTotalStored(json.total ?? null);
+      if (json.dateRange) setDataRange(json.dateRange);
+      setBulkFetching(json.bulkFetching ?? false);
+    } catch {
+      setAlerts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   return (
     <div className="min-h-screen bg-[#09090f] text-gray-100">
@@ -85,132 +69,27 @@ export default function Home() {
         <h1 className="text-xl font-bold tracking-tight">
           Tuni<span className="text-red-500">lert</span>
         </h1>
-        <span className="text-gray-600 text-sm ml-1">
-          Israel Red Alert Statistics
-        </span>
+        <span className="text-gray-600 text-sm ml-1">Israel Red Alert Statistics</span>
         <div className="ml-auto text-right">
           {totalStored !== null && (
-            <span className="text-gray-600 text-xs">
-              {totalStored.toLocaleString()} alerts stored
-            </span>
+            <span className="text-gray-600 text-xs">{totalStored.toLocaleString()} alerts stored</span>
           )}
           {dataRange?.from && (
             <span className="text-gray-700 text-xs block">
-              Data: {dataRange.from} → {dataRange.to} ({dataRange.uniqueDates} day{dataRange.uniqueDates !== 1 ? "s" : ""})
+              Data: {dataRange.from} → {dataRange.to}
             </span>
           )}
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        <LiveAlertsBanner onAlert={setLiveAlert} />
+        <LiveAlertsBanner onAlert={setLiveAlert} myCity={myCity} />
 
-        {/* Filters */}
-        <div className="rounded-xl border border-gray-800 bg-gray-900/20 p-4 space-y-3">
-          {/* Date row */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-gray-500 text-xs uppercase tracking-widest w-10">Date</span>
-            <div className="flex items-center gap-2">
-              <label className="text-gray-500 text-sm">From</label>
-              <input
-                type="date"
-                value={fromDate}
-                max={toDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-gray-500 text-sm">To</label>
-              <input
-                type="date"
-                value={toDate}
-                min={fromDate}
-                max={today}
-                onChange={(e) => setToDate(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div className="flex gap-2 ml-1">
-              {quickRanges.map((r) => (
-                <button
-                  key={r.label}
-                  onClick={() => applyQuickRange(r.days)}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors"
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Time row */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-gray-500 text-xs uppercase tracking-widest w-10 flex items-center gap-1">
-              <Clock size={12} /> Time
-            </span>
-            <div className="flex items-center gap-2">
-              <label className="text-gray-500 text-sm">From</label>
-              <input
-                type="time"
-                value={fromTime}
-                onChange={(e) => setFromTime(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-gray-500 text-sm">To</label>
-              <input
-                type="time"
-                value={toTime}
-                onChange={(e) => setToTime(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <button
-              onClick={() => { setFromTime("00:00"); setToTime("23:59"); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors"
-            >
-              All day
-            </button>
-            <button
-              onClick={() => { setFromTime("06:00"); setToTime("12:00"); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors"
-            >
-              Morning
-            </button>
-            <button
-              onClick={() => { setFromTime("12:00"); setToTime("18:00"); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors"
-            >
-              Afternoon
-            </button>
-            <button
-              onClick={() => { setFromTime("18:00"); setToTime("23:59"); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors"
-            >
-              Evening
-            </button>
-            <button
-              onClick={() => { setFromTime("00:00"); setToTime("06:00"); }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors"
-            >
-              Night
-            </button>
-            {isLoading && (
-              <span className="text-gray-500 text-sm animate-pulse ml-2">
-                Loading…
-              </span>
-            )}
-          </div>
-
-          {/* Data availability notice */}
-          {dataRange && dataRange.uniqueDates <= 1 && (
-            <p className="text-yellow-600/80 text-xs mt-1">
-              The Pikud HaOref API is limited to ~3,000 most recent records. On active days like today, only today&apos;s data is available. The store accumulates data over time — date filtering will improve as more days are collected.
-            </p>
-          )}
-        </div>
+        {bulkFetching && (
+          <p className="text-blue-400/80 text-xs animate-pulse text-center">
+            Loading historical data — more records will appear shortly.
+          </p>
+        )}
 
         <StatsCards alerts={alerts} isLoading={isLoading} />
 
@@ -224,20 +103,10 @@ export default function Home() {
 
         <HistoryChart
           alerts={alerts}
-          fromDate={fromDate}
-          toDate={toDate}
+          fromDate={today}
+          toDate={today}
           isLoading={isLoading}
         />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <HeatmapChart alerts={alerts} isLoading={isLoading} />
-          <ProbabilityWidget
-            alerts={alerts}
-            fromDate={fromDate}
-            toDate={toDate}
-            isLoading={isLoading}
-          />
-        </div>
       </main>
 
       <footer className="border-t border-gray-800 text-center text-gray-600 text-xs py-4 mt-6">
