@@ -9,7 +9,7 @@ import StatsCards from "@/components/StatsCards";
 import HistoryChart from "@/components/HistoryChart";
 import RegionBreakdown from "@/components/RegionBreakdown";
 import AlertsFeed from "@/components/AlertsFeed";
-import { Activity } from "lucide-react";
+import { Activity, Clock } from "lucide-react";
 
 const AlertsMap = dynamic(() => import("@/components/AlertsMap"), {
   ssr: false,
@@ -21,6 +21,8 @@ const AlertsMap = dynamic(() => import("@/components/AlertsMap"), {
 export default function Home() {
   const today = format(new Date(), "yyyy-MM-dd");
 
+  const [fromTime, setFromTime] = useState("00:00");
+  const [toTime, setToTime] = useState("23:59");
   const [alerts, setAlerts] = useState<HistoricalAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [liveAlert, setLiveAlert] = useState<LiveAlert | null>(null);
@@ -42,8 +44,6 @@ export default function Home() {
   const fetchHistory = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Always fetch all stored data (no date filter) so charts and map have full context.
-      // Today's-only filtering is done client-side in each component.
       const params = new URLSearchParams({ _t: String(Date.now()) });
       const res = await fetch(`/api/history?${params}`);
       const json = await res.json();
@@ -61,6 +61,9 @@ export default function Home() {
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
+
+  const inputClass =
+    "bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-red-600";
 
   return (
     <div className="min-h-screen bg-[#09090f] text-gray-100">
@@ -83,7 +86,47 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        <LiveAlertsBanner onAlert={setLiveAlert} myCity={myCity} />
+        <LiveAlertsBanner onAlert={setLiveAlert} myCity={myCity} onCityChange={handleCityChange} />
+
+        {/* Time filter */}
+        <div className="rounded-xl border border-gray-800 bg-gray-900/20 px-4 py-3 flex flex-wrap items-center gap-3">
+          <span className="text-gray-500 text-xs uppercase tracking-widest flex items-center gap-1">
+            <Clock size={12} /> Time
+          </span>
+          <input
+            type="time"
+            value={fromTime}
+            onChange={(e) => setFromTime(e.target.value)}
+            className={inputClass}
+          />
+          <span className="text-gray-600 text-sm">–</span>
+          <input
+            type="time"
+            value={toTime}
+            onChange={(e) => setToTime(e.target.value)}
+            className={inputClass}
+          />
+          {[
+            { label: "All day",   ft: "00:00", tt: "23:59" },
+            { label: "Night",     ft: "00:00", tt: "06:00" },
+            { label: "Morning",   ft: "06:00", tt: "12:00" },
+            { label: "Afternoon", ft: "12:00", tt: "18:00" },
+            { label: "Evening",   ft: "18:00", tt: "23:59" },
+          ].map((r) => (
+            <button
+              key={r.label}
+              onClick={() => { setFromTime(r.ft); setToTime(r.tt); }}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                fromTime === r.ft && toTime === r.tt
+                  ? "bg-gray-700 border-gray-500 text-gray-200"
+                  : "bg-gray-800 hover:bg-gray-700 text-gray-400 border-gray-700"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+          {isLoading && <span className="text-gray-500 text-xs animate-pulse">Loading…</span>}
+        </div>
 
         {bulkFetching && (
           <p className="text-blue-400/80 text-xs animate-pulse text-center">
@@ -91,7 +134,7 @@ export default function Home() {
           </p>
         )}
 
-        <StatsCards alerts={alerts} isLoading={isLoading} />
+        <StatsCards alerts={alerts} isLoading={isLoading} fromTime={fromTime} toTime={toTime} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 space-y-5">
