@@ -9,6 +9,7 @@ import StatsCards from "@/components/StatsCards";
 import HistoryChart from "@/components/HistoryChart";
 import RegionBreakdown from "@/components/RegionBreakdown";
 import AlertsFeed from "@/components/AlertsFeed";
+import MyAreaCard from "@/components/MyAreaCard";
 import { Activity, Clock } from "lucide-react";
 
 const AlertsMap = dynamic(() => import("@/components/AlertsMap"), {
@@ -135,6 +136,8 @@ export default function Home() {
         )}
 
         <StatsCards alerts={alerts} isLoading={isLoading} fromTime={fromTime} toTime={toTime} />
+
+        <MyAreaCard alerts={alerts} isLoading={isLoading} myCity={myCity} onCityChange={handleCityChange} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 space-y-5">
