@@ -1,22 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
-import { HistoricalAlert, isRealAlert, CATEGORY_LABELS, CITY_COORDS } from "@/lib/types";
+import { HistoricalAlert, isRealAlert, CATEGORY_LABELS } from "@/lib/types";
 import { formatDistanceToNow, parseISO, getHours } from "date-fns";
 import { MapPin, Clock } from "lucide-react";
 
 function pad(h: number) { return String(h).padStart(2, "0"); }
 
-const CITY_LIST = Object.keys(CITY_COORDS).sort((a, b) => a.localeCompare(b, "he"));
-
 interface Props {
   alerts: HistoricalAlert[];
   isLoading: boolean;
   myCity: string;
-  onCityChange: (city: string) => void;
 }
 
-export default function MyAreaCard({ alerts, isLoading, myCity, onCityChange }: Props) {
+export default function MyAreaCard({ alerts, isLoading, myCity }: Props) {
   const stats = useMemo(() => {
     if (!myCity) return null;
 
@@ -43,27 +40,15 @@ export default function MyAreaCard({ alerts, isLoading, myCity, onCityChange }: 
 
   return (
     <div className="rounded-xl border border-gray-800 bg-gray-900/30 p-5 space-y-4">
-      {/* Header + city selector */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-gray-200 font-semibold flex items-center gap-2">
-          <MapPin size={15} className="text-red-400" />
-          My Area
-        </h2>
-        <select
-          value={myCity}
-          onChange={(e) => onCityChange(e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-red-600"
-        >
-          <option value="">Select your area…</option>
-          {CITY_LIST.map((city) => (
-            <option key={city} value={city}>{city}</option>
-          ))}
-        </select>
-      </div>
+      {/* Header */}
+      <h2 className="text-gray-200 font-semibold flex items-center gap-2">
+        <MapPin size={15} className="text-red-400" />
+        My Area{myCity ? <span className="text-gray-500 font-normal text-sm">· {myCity}</span> : null}
+      </h2>
 
       {/* No city selected */}
       {!myCity && (
-        <p className="text-gray-600 text-sm">Select your city above to see when it last had an alert.</p>
+        <p className="text-gray-600 text-sm">Set your area in the alert banner above to see stats here.</p>
       )}
 
       {/* City selected but no data */}

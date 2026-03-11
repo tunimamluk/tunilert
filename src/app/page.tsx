@@ -32,10 +32,10 @@ export default function Home() {
   const [bulkFetching, setBulkFetching] = useState(false);
 
   // My area — shared between LiveAlertsBanner (gating sound) and any future area widget
-  const [myCity, setMyCity] = useState<string>(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("tunilert_my_city") ?? "";
-    return "";
-  });
+  const [myCity, setMyCity] = useState<string>("");
+  useEffect(() => {
+    try { setMyCity(localStorage.getItem("tunilert_my_city") ?? ""); } catch { /* ignore */ }
+  }, []);
 
   function handleCityChange(city: string) {
     setMyCity(city);
@@ -137,7 +137,7 @@ export default function Home() {
 
         <StatsCards alerts={alerts} isLoading={isLoading} fromTime={fromTime} toTime={toTime} />
 
-        <MyAreaCard alerts={alerts} isLoading={isLoading} myCity={myCity} onCityChange={handleCityChange} />
+        <MyAreaCard alerts={alerts} isLoading={isLoading} myCity={myCity} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 space-y-5">
