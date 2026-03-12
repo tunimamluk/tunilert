@@ -19,16 +19,20 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
   const [alert, setAlert] = useState<LiveAlert | null>(null);
   const [timeString, setTimeString] = useState<string>("");
   const [notifEnabled, setNotifEnabled] = useState(false);
-  const [soundMode, setSoundModeState] = useState<SoundMode>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(SOUND_LS_KEY);
-      if (saved === "all" || saved === "myArea" || saved === "off") return saved;
-    }
-    return "all";
-  });
+  const [soundMode, setSoundModeState] = useState<SoundMode>("all");
   const mounted = useRef(false);
   const prevAlertId = useRef<string | null>(null);
-  const soundModeRef = useRef<SoundMode>(soundMode);
+  const soundModeRef = useRef<SoundMode>("all");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SOUND_LS_KEY);
+      if (saved === "all" || saved === "myArea" || saved === "off") {
+        setSoundModeState(saved);
+        soundModeRef.current = saved;
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   function setSoundMode(mode: SoundMode) {
     setSoundModeState(mode);
