@@ -60,7 +60,7 @@ export default function MyAreaCard({ alerts, isLoading, myCity }: Props) {
       {myCity && stats && stats.last && (
         <div className="space-y-3">
           {/* Last alert highlight */}
-          <div className="bg-gray-800/60 rounded-xl px-4 py-3 flex items-center gap-4">
+          <div className="bg-gray-800/60 rounded-xl px-4 py-3 flex flex-wrap items-center gap-4">
             <div>
               <p className="text-gray-500 text-xs uppercase tracking-widest mb-0.5">Last alert</p>
               <p className="text-gray-100 font-semibold text-lg">

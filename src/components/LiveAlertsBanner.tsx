@@ -116,7 +116,7 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
   const myCityActive = myCity && alert ? alert.data.includes(myCity) : false;
 
   const controls = (
-    <div className="ml-auto flex items-center gap-2 shrink-0 flex-wrap justify-end">
+    <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2 flex-wrap sm:justify-end justify-between">
       {/* City selector */}
       <div className="flex items-center gap-1.5">
         <MapPin size={12} className="text-gray-500 shrink-0" />
@@ -187,7 +187,7 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
 
   if (!alert) {
     return (
-      <div className="flex flex-wrap items-center gap-3 bg-green-950/40 border border-green-800/50 rounded-xl px-5 py-4">
+      <div className="flex flex-wrap items-center gap-3 bg-green-950/40 border border-green-800/50 rounded-xl px-4 sm:px-5 py-3 sm:py-4">
         <Shield className="text-green-400 shrink-0" size={20} />
         <div>
           <span className="text-green-400 font-semibold text-sm">No active alerts</span>
@@ -211,7 +211,7 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
         <span className="text-gray-400 text-xs ml-2">{timeString}</span>
         {controls}
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 overflow-y-auto pr-1" style={{ maxHeight: 120 }}>
         {alert.data.map((city) => (
           <span
             key={city}

@@ -38,7 +38,7 @@ export default function RegionBreakdown({ alerts, isLoading }: Props) {
           {sorted.map(([city, count]) => (
             <div key={city} className="flex items-center gap-3">
               <span
-                className="text-gray-300 text-sm w-36 shrink-0 truncate"
+                className="text-gray-300 text-sm w-24 sm:w-36 shrink-0 truncate"
                 title={city}
               >
                 {city}
