@@ -64,29 +64,29 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#09090f] text-gray-100">
-      <header className="border-b border-gray-800 px-6 py-4 flex items-center gap-3">
-        <Activity className="text-red-500" size={24} />
-        <h1 className="text-xl font-bold tracking-tight">
+      <header className="border-b border-gray-800 px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+        <Activity className="text-red-500 shrink-0" size={22} />
+        <h1 className="text-lg sm:text-xl font-bold tracking-tight">
           Tuni<span className="text-red-500">lert</span>
         </h1>
-        <span className="text-gray-600 text-sm ml-1">Israel Red Alert Statistics</span>
-        <div className="ml-auto text-right">
+        <span className="text-gray-600 text-xs sm:text-sm ml-1 hidden sm:inline">Israel Red Alert Statistics</span>
+        <div className="ml-auto text-right shrink-0">
           {totalStored !== null && (
             <span className="text-gray-600 text-xs">{totalStored.toLocaleString()} alerts stored</span>
           )}
           {dataRange?.from && (
-            <span className="text-gray-700 text-xs block">
+            <span className="text-gray-700 text-xs block hidden sm:block">
               Data: {dataRange.from} → {dataRange.to}
             </span>
           )}
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <LiveAlertsBanner onAlert={setLiveAlert} myCity={myCity} onCityChange={handleCityChange} />
 
         {/* Time filter */}
-        <div className="rounded-xl border border-gray-800 bg-gray-900/20 px-4 py-3 flex flex-wrap items-center gap-3">
+        <div className="rounded-xl border border-gray-800 bg-gray-900/20 px-3 sm:px-4 py-3 flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-gray-500 text-xs uppercase tracking-widest flex items-center gap-1">
             <Clock size={12} /> Time
           </span>

@@ -88,7 +88,7 @@ export default function AlertsFeed({ alerts, isLoading }: Props) {
         </div>
       ) : (
         <>
-          <div className="space-y-4 overflow-y-auto pr-1" style={{ maxHeight: 480 }}>
+          <div className="space-y-4 overflow-y-auto pr-1" style={{ maxHeight: "min(480px, 60vh)" }}>
             {visibleDates.map((date) => (
               <div key={date}>
                 <div className="text-gray-500 text-xs font-medium mb-2 sticky top-0 bg-gray-900/80 py-1">
