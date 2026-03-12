@@ -202,12 +202,32 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
   }
 
   const categoryLabel = CATEGORY_LABELS[parseInt(alert.cat, 10)] ?? alert.title;
+  const cat = parseInt(alert.cat, 10);
+
+  const isEventDone = cat === 13;
+  const isIncoming  = cat === 14; // incoming warning — alert in next few minutes
+
+  const bannerClass = isEventDone
+    ? "bg-gray-800/60 border border-gray-600/60"
+    : isIncoming
+    ? "bg-blue-950/70 border border-blue-500/80"
+    : "bg-red-950/70 border border-red-500/80";
+
+  const iconClass  = isEventDone ? "text-gray-400" : isIncoming ? "text-blue-400" : "text-red-400";
+  const titleClass = isEventDone ? "text-gray-300" : isIncoming ? "text-blue-300" : "text-red-300";
+
+  const chipClass = (city: string) => {
+    if (city === myCity) return "bg-yellow-700/60 border-yellow-500/60 text-yellow-100 font-semibold";
+    if (isEventDone)     return "bg-gray-700/50 border-gray-600/50 text-gray-300";
+    if (isIncoming)      return "bg-blue-800/60 border-blue-600/50 text-blue-100";
+    return "bg-red-800/60 border-red-600/50 text-red-100";
+  };
 
   return (
-    <div className="animate-pulse-once bg-red-950/70 border border-red-500/80 rounded-xl px-5 py-4">
+    <div className={`animate-pulse-once rounded-xl px-5 py-4 ${bannerClass}`}>
       <div className="flex flex-wrap items-center gap-3 mb-3">
-        <AlertTriangle className="text-red-400 animate-bounce shrink-0" size={22} />
-        <span className="text-red-300 font-bold text-base tracking-wide uppercase">{categoryLabel}</span>
+        <AlertTriangle className={`${iconClass} ${!isEventDone ? "animate-bounce" : ""} shrink-0`} size={22} />
+        <span className={`font-bold text-base tracking-wide uppercase ${titleClass}`}>{categoryLabel}</span>
         <span className="text-gray-400 text-xs ml-2">{timeString}</span>
         {controls}
       </div>
@@ -215,11 +235,7 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
         {alert.data.map((city) => (
           <span
             key={city}
-            className={`text-sm px-3 py-1 rounded-full border ${
-              city === myCity
-                ? "bg-yellow-700/60 border-yellow-500/60 text-yellow-100 font-semibold"
-                : "bg-red-800/60 border-red-600/50 text-red-100"
-            }`}
+            className={`text-sm px-3 py-1 rounded-full border ${chipClass(city)}`}
           >
             {city}
             {city === myCity && " ◀ your area"}
