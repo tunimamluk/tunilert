@@ -8,6 +8,7 @@ import StatsCards from "@/components/StatsCards";
 import RegionBreakdown from "@/components/RegionBreakdown";
 import AlertsFeed from "@/components/AlertsFeed";
 import MyAreaCard from "@/components/MyAreaCard";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Activity, Clock } from "lucide-react";
 
 const AlertsMap = dynamic(() => import("@/components/AlertsMap"), {
@@ -63,22 +64,25 @@ export default function Home() {
     "bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-red-600";
 
   return (
-    <div className="min-h-screen bg-[#09090f] text-gray-100">
+    <div className="min-h-screen bg-gray-950 text-gray-100">
       <header className="border-b border-gray-800 px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
         <Activity className="text-red-500 shrink-0" size={22} />
         <h1 className="text-lg sm:text-xl font-bold tracking-tight">
           Tuni<span className="text-red-500">lert</span>
         </h1>
         <span className="text-gray-600 text-xs sm:text-sm ml-1 hidden sm:inline">Israel Red Alert Statistics</span>
-        <div className="ml-auto text-right shrink-0">
-          {totalStored !== null && (
-            <span className="text-gray-600 text-xs">{totalStored.toLocaleString()} alerts stored</span>
-          )}
-          {dataRange?.from && (
-            <span className="text-gray-700 text-xs block hidden sm:block">
-              Data: {dataRange.from} → {dataRange.to}
-            </span>
-          )}
+        <div className="ml-auto flex items-center gap-3 shrink-0">
+          <div className="text-right">
+            {totalStored !== null && (
+              <span className="text-gray-600 text-xs">{totalStored.toLocaleString()} alerts stored</span>
+            )}
+            {dataRange?.from && (
+              <span className="text-gray-700 text-xs block hidden sm:block">
+                Data: {dataRange.from} → {dataRange.to}
+              </span>
+            )}
+          </div>
+          <ThemeToggle />
         </div>
       </header>
 

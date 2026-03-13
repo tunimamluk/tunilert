@@ -190,7 +190,7 @@ export default function StatsCards({ alerts, isLoading, fromTime, toTime }: Prop
       {/* 1 locked card + 3 configurable slots */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          label="Alerts in Range"
+          label="Alerts in Time Range"
           value={rangeCount}
           sub={`${fromTime} – ${toTime}`}
           colorClass="border-blue-800/50 bg-blue-950/30 text-blue-300"
