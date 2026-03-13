@@ -59,17 +59,27 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
     } catch { /* ignore */ }
   }
 
+  const notifEnabledRef = useRef(false);
+
   async function sendBrowserNotification(title: string, body: string) {
+    if (!notifEnabledRef.current) return;
     if (!("Notification" in window)) return;
     if (Notification.permission === "denied") return;
     if (Notification.permission === "default") await Notification.requestPermission();
     if (Notification.permission === "granted") new Notification(title, { body, icon: "/favicon.ico" });
   }
 
-  async function enableNotifications() {
+  async function toggleNotifications() {
+    if (notifEnabled) {
+      setNotifEnabled(false);
+      notifEnabledRef.current = false;
+      return;
+    }
     if (!("Notification" in window)) return;
     const perm = await Notification.requestPermission();
-    setNotifEnabled(perm === "granted");
+    const on = perm === "granted";
+    setNotifEnabled(on);
+    notifEnabledRef.current = on;
   }
 
   const myCityRef = useRef(myCity);
@@ -111,7 +121,10 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
   useEffect(() => {
     mounted.current = true;
     setTimeString(new Date().toLocaleTimeString());
-    if ("Notification" in window && Notification.permission === "granted") setNotifEnabled(true);
+    if ("Notification" in window && Notification.permission === "granted") {
+      setNotifEnabled(true);
+      notifEnabledRef.current = true;
+    }
     fetchAlert();
     const interval = setInterval(fetchAlert, 3000);
     return () => { mounted.current = false; clearInterval(interval); };
@@ -175,11 +188,11 @@ export default function LiveAlertsBanner({ onAlert, myCity, onCityChange }: Prop
 
       {/* Browser notifications */}
       <button
-        onClick={enableNotifications}
-        title={notifEnabled ? "Notifications enabled" : "Enable browser notifications"}
+        onClick={toggleNotifications}
+        title={notifEnabled ? "Click to turn off notifications" : "Enable browser notifications"}
         className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
           notifEnabled
-            ? "border-green-700/50 bg-green-950/40 text-green-400"
+            ? "border-green-700/50 bg-green-950/40 text-green-400 hover:bg-red-950/40 hover:border-red-700/50 hover:text-red-400"
             : "border-gray-700 bg-gray-800/50 text-gray-400 hover:bg-gray-700"
         }`}
       >
